@@ -39,7 +39,8 @@ class Culqi extends PaymentModule
         $this->displayName = 'Culqi';
         $this->description = $this->l('Acepta tarjetas de crédito y débito en tu tienda online.');
         $this->confirmUninstall = $this->l('¿Estás seguro que quieres desintalar el módulo de Culqi?');
-
+        $this->errorPhone = "El campo 'Teléfono' es inv\u00e1lido o est\u00e1 vac\u00edo. El valor debe ser de menos de 15 caracteres, y m\u00e1s de 5.";
+        $this->errorAddress = "El campo 'Dirección' es inv\u00e1lido o est\u00e1 vac\u00edo. El valor debe ser de menos de 100 caracteres, y m\u00e1s de 5.";
     }
 
     public function install()
@@ -50,7 +51,9 @@ class Culqi extends PaymentModule
             parent::install() &&
             $this->registerHook('paymentOptions') &&
             Configuration::updateValue('CULQI_LLAVE_SECRETA', '') &&
-            Configuration::updateValue('CULQI_LLAVE_PUBLICA', '')
+            Configuration::updateValue('CULQI_LLAVE_PUBLICA', '') &&
+            Configuration::updateValue('CULQI_ERROR_MESSAGE_PHONE', $this->errorPhone) &&
+            Configuration::updateValue('CULQI_ERROR_MESSAGE_ADDRESS', $this->errorAddress)
         );
     }
 
@@ -187,7 +190,9 @@ class Culqi extends PaymentModule
         "orden" => $cart->id,
         "total" => $cart->getOrderTotal(true, Cart::BOTH),
         "llave_publica" => Configuration::get('CULQI_LLAVE_PUBLICA'),
-        "currency" => $this->context->currency->iso_code
+        "currency" => $this->context->currency->iso_code,
+        "error_message_phone" => Configuration::get('CULQI_ERROR_MESSAGE_PHONE'),
+        "error_message_address" => Configuration::get('CULQI_ERROR_MESSAGE_ADDRESS')
       );
     }
 
@@ -212,6 +217,8 @@ class Culqi extends PaymentModule
         || !Configuration::deleteByName('CULQI_STATE_ERROR')
         || !Configuration::deleteByName('CULQI_LLAVE_SECRETA')
         || !Configuration::deleteByName('CULQI_LLAVE_PUBLICA')
+        || !Configuration::deleteByName('CULQI_ERROR_MESSAGE_PHONE')
+        || !Configuration::deleteByName('CULQI_ERROR_MESSAGE_ADDRESS')
         || !$this->uninstallStates())
             return false;
         return true;
@@ -326,6 +333,18 @@ class Culqi extends PaymentModule
                         'label' => $this->l('Llave Secreta'),
                         'name' => 'CULQI_LLAVE_SECRETA',
                         'required' => true
+                    ),
+                    array(
+                        'type' => 'text',
+                        'label' => $this->l('Mensaje de error - teléfono'),
+                        'name' => 'CULQI_ERROR_MESSAGE_PHONE',
+                        'required' => true
+                    ),
+                    array(
+                        'type' => 'text',
+                        'label' => $this->l('Mensaje de error - dirección'),
+                        'name' => 'CULQI_ERROR_MESSAGE_ADDRESS',
+                        'required' => true
                     )
                 ),
                 'submit' => array(
@@ -359,7 +378,9 @@ class Culqi extends PaymentModule
     {
         return array(
             'CULQI_LLAVE_SECRETA' => Tools::getValue('CULQI_LLAVE_SECRETA', Configuration::get('CULQI_LLAVE_SECRETA')),
-            'CULQI_LLAVE_PUBLICA' => Tools::getValue('CULQI_LLAVE_PUBLICA', Configuration::get('CULQI_LLAVE_PUBLICA'))
+            'CULQI_LLAVE_PUBLICA' => Tools::getValue('CULQI_LLAVE_PUBLICA', Configuration::get('CULQI_LLAVE_PUBLICA')),
+            'CULQI_ERROR_MESSAGE_PHONE' => Tools::getValue('CULQI_ERROR_MESSAGE_PHONE', Configuration::get('CULQI_ERROR_MESSAGE_PHONE')),
+            'CULQI_ERROR_MESSAGE_ADDRESS' => Tools::getValue('CULQI_ERROR_MESSAGE_ADDRESS', Configuration::get('CULQI_ERROR_MESSAGE_ADDRESS'))
         );
     }
 
@@ -369,6 +390,8 @@ class Culqi extends PaymentModule
         {
             Configuration::updateValue('CULQI_LLAVE_SECRETA', Tools::getValue('CULQI_LLAVE_SECRETA'));
             Configuration::updateValue('CULQI_LLAVE_PUBLICA', Tools::getValue('CULQI_LLAVE_PUBLICA'));
+            Configuration::updateValue('CULQI_ERROR_MESSAGE_PHONE', Tools::getValue('CULQI_ERROR_MESSAGE_PHONE'));
+            Configuration::updateValue('CULQI_ERROR_MESSAGE_ADDRESS', Tools::getValue('CULQI_ERROR_MESSAGE_ADDRESS'));
         }
         $this->_html .= $this->displayConfirmation($this->l('Se actualizaron las configuraciones'));
     }

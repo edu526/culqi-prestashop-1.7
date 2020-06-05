@@ -147,7 +147,18 @@ function culqi() {
 						  }
 						  if(result.object === 'error') {
 						    $('body').waitMe('hide');
-						    showResult('red',result.user_message);
+									 var errorPhone = '{/literal}{$error_message_phone|escape:'htmlall':'UTF-8'}{literal}';
+									 var errorAddress = '{/literal}{$error_message_address|escape:'htmlall':'UTF-8'}{literal}'
+
+										if(result.param === "phone_number") {
+										  showResult('red', errorPhone);
+										}
+										else if(result.param === "address") {
+										  showResult('red', errorAddress);
+										}
+						    else {
+						     showResult('red', result.user_message);
+						    }
 						  }
 						}
 	      }
